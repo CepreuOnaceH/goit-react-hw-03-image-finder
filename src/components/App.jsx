@@ -17,12 +17,13 @@ export class App extends Component {
     modalImageUrl: null,
     isModalOpen: false,
     page: 1,
+    hasMoreImages: true,
   };
 
   FetchPostByQuerry = async () => {
     try {
       this.setState({ isLoading: true, images: [] });
-      const images = await findImage(this.state.querry);
+      const images = await findImage(this.state.querry, this.state.page);
       if (images.length === 0) {
         swal(
           'Oops',
@@ -36,14 +37,17 @@ export class App extends Component {
         }));
       }
     } catch (error) {
+      this.setState({ error: error.message });
       swal('Error', 'Error 404 - "Not Found"', 'error');
     } finally {
       this.setState({ isLoading: false });
     }
   };
+
   loadMoreImages = () => {
     this.setState({ isLoading: true });
-    findImage(this.state.querry, this.state.page + 1)
+
+    findImage(this.state.querry, this.state.page)
       .then(newImages => {
         this.setState(prevState => ({
           images: [...prevState.images, ...newImages],
@@ -52,18 +56,24 @@ export class App extends Component {
         }));
       })
       .catch(error => {
-        this.setState({ error: error.message, isLoading: false });
+        this.setState({
+          error: error.message,
+          isLoading: false,
+          hasMoreImages: false,
+        });
       });
   };
 
   componentDidUpdate(_, prevState) {
     if (prevState.querry !== this.state.querry) {
+      this.setState({ page: 1 });
       this.FetchPostByQuerry();
     }
   }
 
   handleSearchSubmit = e => {
     e.preventDefault();
+    this.setState({ page: 1 });
     const querry = e.currentTarget.elements.searchImage.value;
     this.setState({ querry });
     e.currentTarget.reset();
@@ -84,14 +94,15 @@ export class App extends Component {
   };
 
   render() {
-    const showPosts =
-      Array.isArray(this.state.images) && this.state.images.length;
+    const showPosts = this.state.images.length > 0;
+    console.log(this.state.error);
+
     return (
       <>
         <Searchbar handleSearchSubmit={this.handleSearchSubmit} />
         {this.state.isLoading && <Loader />}
         {this.state.error ? (
-          <p className="error">{this.state.error}</p>
+          swal('Error', 'Error 404 - No more images', 'error')
         ) : (
           <ImageGallery
             images={this.state.images}
@@ -99,7 +110,7 @@ export class App extends Component {
             showPosts={showPosts}
           />
         )}
-        {showPosts && (
+        {showPosts && this.state.hasMoreImages && (
           <Button
             onClick={this.loadMoreImages}
             showButton={!this.state.isLoading}
