@@ -95,14 +95,13 @@ export class App extends Component {
 
   render() {
     const showPosts = this.state.images.length > 0;
-    console.log(this.state.error);
 
     return (
       <>
         <Searchbar handleSearchSubmit={this.handleSearchSubmit} />
         {this.state.isLoading && <Loader />}
         {this.state.error ? (
-          swal('Error', 'Error 404 - No more images', 'error')
+          this.setState({ hasMoreImages: false })
         ) : (
           <ImageGallery
             images={this.state.images}
