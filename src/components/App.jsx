@@ -31,10 +31,12 @@ export class App extends Component {
           'error'
         );
       } else {
-        this.setState(prevState => ({
-          images: [...prevState.images, ...images],
-          page: prevState.page + 1,
-        }));
+        const newImages = [...this.state.images, ...images];
+        this.setState({
+          images: newImages,
+          page: this.state.page + 1,
+          hasMoreImages: newImages.length >= 12,
+        });
       }
     } catch (error) {
       this.setState({ error: error.message });
